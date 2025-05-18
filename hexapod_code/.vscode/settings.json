@@ -1,0 +1,7 @@
+{
+    "files.associations": {
+        "*.sv": "systemverilog",
+        "cmath": "cpp",
+        "new": "cpp"
+    }
+}
