@@ -12,21 +12,20 @@ private:
     int hipId;
     int kneeId;
     int ankleId;
-    double thetas[3];
+    double thetas[3] = {0, 0, 0};
 
     // static fields
     static constexpr int TOTAL_LEG_SERVOS = 3;
     static constexpr int FOOT_DEV_ANGLE = 15;
     static constexpr double DEGREE_PER_UNIT = 0.24;
     static constexpr int FOOT_UNIT_OFFSET = ceil(FOOT_DEV_ANGLE / DEGREE_PER_UNIT);
-    static bool verbose;
     static double range_limits[6];
 
     // serial config
     static HardwareSerial hardwareSerial;
     static constexpr int BAUDRATE = 115200;
-    static constexpr int SERVO_SERIAL_TX = 17;
-    static constexpr int SERVO_SERIAL_RX = 16;
+    static constexpr int SERVO_SERIAL_TX = 5; // 17
+    static constexpr int SERVO_SERIAL_RX = 4; // 16
 
 public:
     // link lengths

@@ -4,10 +4,13 @@
 #include "Kinematics.h"
 #include <Arduino.h>
 
-bool Leg::verbose = false;
-double Leg::range_limits[6] = {-45.1, 45.1, -90.1, 90.1, -120.1, 0.1};
 HardwareSerial Leg::hardwareSerial(1);
 LobotSerialServoControl Leg::busServo(Leg::hardwareSerial);
+double Leg::range_limits[6] = {
+    -46.0, 46.0, // hip
+    -91.0, 91.0, // knee
+    -121.0, 1.0  // ankle
+};
 
 Leg::Leg(int leg_id, int hip_id, int knee_id, int ankle_id)
 {
@@ -15,7 +18,7 @@ Leg::Leg(int leg_id, int hip_id, int knee_id, int ankle_id)
     hipId = hip_id;
     kneeId = knee_id;
     ankleId = ankle_id;
-    hardwareSerial.begin(BAUDRATE, SERIAL_8N1, SERVO_SERIAL_TX, SERVO_SERIAL_RX);
+    hardwareSerial.begin(BAUDRATE, SERIAL_8N1, leg_id > 3 ? 17 : 5, leg_id > 3 ? 16 : 4);
     busServo.OnInit();
     busServo.lobotSerialServoOffsetWrite(ankleId, FOOT_UNIT_OFFSET);
 }
@@ -74,13 +77,12 @@ bool Leg::leg_p2p(double sx, double sy, double sz,
         double y = sy + dy * t;
         double z = sz + dz * t;
         // optional dead-zone clamp
-        double M = STEP_SIZE;
-        if (fabs(x) < M)
-            x = (x >= 0 ? M : -M);
-        if (fabs(y) < M)
-            y = (y >= 0 ? M : -M);
-        if (fabs(z) < M)
-            z = (z >= 0 ? M : -M);
+        // if (fabs(x) < STEP_SIZE)
+        //     x = (x >= 0 ? STEP_SIZE : -STEP_SIZE);
+        // if (fabs(y) < STEP_SIZE)
+        //     y = (y >= 0 ? STEP_SIZE : -STEP_SIZE);
+        // if (fabs(z) < STEP_SIZE)
+        //     z = (z >= 0 ? STEP_SIZE : -STEP_SIZE);
         if (!leg_to_position(x, y, z, ms_per_move))
         {
             Serial.printf(" IK fail @%3d: x=%.1f y=%.1f z=%.1f\n",
