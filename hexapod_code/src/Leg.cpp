@@ -4,8 +4,7 @@
 #include "Kinematics.h"
 #include <Arduino.h>
 
-HardwareSerial Leg::hardwareSerial(1);
-LobotSerialServoControl Leg::busServo(Leg::hardwareSerial);
+// Only keep the static range_limits
 double Leg::range_limits[6] = {
     -46.0, 46.0, // hip
     -91.0, 91.0, // knee
@@ -13,12 +12,16 @@ double Leg::range_limits[6] = {
 };
 
 Leg::Leg(int leg_id, int hip_id, int knee_id, int ankle_id)
+    : legId(leg_id), hipId(hip_id), kneeId(knee_id), ankleId(ankle_id),
+      hardwareSerial(leg_id <= 3 ? 1 : 2), busServo(hardwareSerial) // Initialize instance members
 {
-    legId = leg_id;
-    hipId = hip_id;
-    kneeId = knee_id;
-    ankleId = ankle_id;
-    hardwareSerial.begin(BAUDRATE, SERIAL_8N1, leg_id > 3 ? 17 : 5, leg_id > 3 ? 16 : 4);
+    // Determine pins based on leg_id
+    int tx_pin = leg_id > 3 ? 17 : 5;
+    int rx_pin = leg_id > 3 ? 16 : 4;
+
+    Serial.printf("Leg %d: Using pins RX=%d, TX=%d\n", leg_id, tx_pin, rx_pin);
+
+    hardwareSerial.begin(BAUDRATE, SERIAL_8N1, tx_pin, rx_pin);
     busServo.OnInit();
     busServo.lobotSerialServoOffsetWrite(ankleId, FOOT_UNIT_OFFSET);
 }
@@ -91,8 +94,14 @@ bool Leg::leg_p2p(double sx, double sy, double sz,
 
 void Leg::leg_unload_all()
 {
-    for (int id = hipId; id < hipId + TOTAL_LEG_SERVOS; ++id)
-        busServo.LobotSerialServoUnload(id);
+    Serial.printf("Unloading servos for Leg %d: hip=%d, knee=%d, ankle=%d\n", 
+                  legId, hipId, kneeId, ankleId);
+    
+    // Unload each servo individually with delay and error checking
+    busServo.LobotSerialServoUnload(hipId);
+    busServo.LobotSerialServoUnload(kneeId);
+    busServo.LobotSerialServoUnload(ankleId);
+    delay(100);
 }
 
 void Leg::leg_read_position()

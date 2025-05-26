@@ -14,6 +14,10 @@ private:
     int ankleId;
     double thetas[3] = {0, 0, 0};
 
+    // Make these instance fields instead of static
+    HardwareSerial hardwareSerial;
+    LobotSerialServoControl busServo;
+
     // static fields
     static constexpr int TOTAL_LEG_SERVOS = 3;
     static constexpr int FOOT_DEV_ANGLE = 15;
@@ -22,10 +26,7 @@ private:
     static double range_limits[6];
 
     // serial config
-    static HardwareSerial hardwareSerial;
     static constexpr int BAUDRATE = 115200;
-    static constexpr int SERVO_SERIAL_TX = 5; // 17
-    static constexpr int SERVO_SERIAL_RX = 4; // 16
 
 public:
     // link lengths
@@ -36,8 +37,6 @@ public:
     // sweep parameters
     static constexpr int TOTAL_MS = 1000;    // ms per p2p sweep
     static constexpr float STEP_SIZE = 1.0f; // mm per step
-
-    static LobotSerialServoControl busServo;
 
     Leg(int leg_id, int hip_id, int knee_id, int ankle_id);
     bool leg_to_position(double x, double y, double z, int time_ms);

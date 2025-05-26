@@ -5,7 +5,6 @@ void setup()
 {
     Serial.begin(115200);
     Serial.println("=== Leg Movement Test Suite (Parallel Multi-leg Version) ===");
-
     // Instantiate legs
     Leg leg1(1, 1, 2, 3);
     Leg leg2(2, 4, 5, 6);
@@ -29,7 +28,7 @@ void setup()
     leg4.leg_to_position(x0, y_start, z0, Leg::TOTAL_MS);
     leg5.leg_to_position(x0, y_start, z0, Leg::TOTAL_MS);
     leg6.leg_to_position(x0, y_start, z0, Leg::TOTAL_MS);
-    delay(1000);
+    delay(Leg::TOTAL_MS + 100);
 
     // Compute total distance and steps
     double dx = 0.0;
@@ -70,7 +69,7 @@ void setup()
     }
 
     delay(ms_per_move + uart_pause + 100);
-
+    
     leg1.leg_unload_all();
     leg2.leg_unload_all();
     leg3.leg_unload_all();
