@@ -39,7 +39,7 @@ bool Leg::leg_to_position(double x, double y, double z, int time_ms)
     busServo.LobotSerialServoMove(hipId, deg2unit(thetas[0]), time_ms);
     busServo.LobotSerialServoMove(kneeId, deg2unit(thetas[1]), time_ms);
     busServo.LobotSerialServoMove(ankleId, deg2unit(thetas[2]), time_ms);
-    delay(time_ms);
+    // delay(time_ms);
     return true;
 }
 
@@ -76,20 +76,13 @@ bool Leg::leg_p2p(double sx, double sy, double sz,
         double x = sx + dx * t;
         double y = sy + dy * t;
         double z = sz + dz * t;
-        // optional dead-zone clamp
-        // if (fabs(x) < STEP_SIZE)
-        //     x = (x >= 0 ? STEP_SIZE : -STEP_SIZE);
-        // if (fabs(y) < STEP_SIZE)
-        //     y = (y >= 0 ? STEP_SIZE : -STEP_SIZE);
-        // if (fabs(z) < STEP_SIZE)
-        //     z = (z >= 0 ? STEP_SIZE : -STEP_SIZE);
         if (!leg_to_position(x, y, z, ms_per_move))
         {
             Serial.printf(" IK fail @%3d: x=%.1f y=%.1f z=%.1f\n",
                           i, x, y, z);
             return false;
         }
-        delay(uart_pause);
+        delay(ms_per_move + uart_pause); // give enough time for servos to move
     }
     // wait final
     delay(ms_per_move + uart_pause + 100);

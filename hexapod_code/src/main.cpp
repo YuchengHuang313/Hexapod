@@ -4,88 +4,83 @@
 void setup()
 {
     Serial.begin(115200);
-    delay(1000);
-    Serial.println("=== Leg Movement Test Suite (Extended with Start Moves) ===");
+    Serial.println("=== Leg Movement Test Suite (Parallel Multi-leg Version) ===");
 
-    // Instantiate leg
+    // Instantiate legs
     Leg leg1(1, 1, 2, 3);
-    delay(1000);
+    Leg leg2(2, 4, 5, 6);
+    Leg leg3(3, 7, 8, 9);
+    Leg leg4(4, 10, 11, 12);
+    Leg leg5(5, 13, 14, 15);
+    Leg leg6(6, 16, 17, 18);
+    delay(500);
 
-    // Compute neutral X/Z
+    // Neutral leg position
     float x0 = Leg::HIP_TO_KNEE + Leg::ANKLE_TO_TIP;
     float z0 = Leg::KNEE_TO_ANKLE;
+    float y_start = 150.0f;
+    float y_end = -150.0f;
 
-    // 1) Extended forward/backward sweep (±150 mm)
-    Serial.println("\n1) Extended Forward/backward sweep ±150mm");
-    // Move to start position
-    leg1.leg_to_position(x0, 150.0f, z0, Leg::TOTAL_MS);
-    leg1.leg_read_position();
-    delay(500);
-    // Sweep forward to -150
-    leg1.leg_p2p(x0, 150.0f, z0, x0, -150.0f, z0);
-    leg1.leg_read_position();
-    delay(500);
-    // Move back to start
-    leg1.leg_to_position(x0, -150.0f, z0, Leg::TOTAL_MS);
-    leg1.leg_read_position();
-    delay(500);
+    // Move all legs to the same starting position
+    Serial.println("\n1) Move all legs to starting position");
+    leg1.leg_to_position(x0, y_start, z0, Leg::TOTAL_MS);
+    leg2.leg_to_position(x0, y_start, z0, Leg::TOTAL_MS);
+    leg3.leg_to_position(x0, y_start, z0, Leg::TOTAL_MS);
+    leg4.leg_to_position(x0, y_start, z0, Leg::TOTAL_MS);
+    leg5.leg_to_position(x0, y_start, z0, Leg::TOTAL_MS);
+    leg6.leg_to_position(x0, y_start, z0, Leg::TOTAL_MS);
+    delay(1000);
 
-    // 2) High lift up and deep drop down (±100 mm)
-    Serial.println("\n2) High lift (z+=100) and deep drop (z-=100)");
-    // Move to neutral start
-    leg1.leg_to_position(x0, 0.0f, z0, Leg::TOTAL_MS);
-    leg1.leg_read_position();
-    delay(500);
-    // Lift up
-    leg1.leg_p2p(x0, 0.0f, z0, x0, 0.0f, z0 + 100.0f);
-    leg1.leg_read_position();
-    delay(500);
-    // Drop down
-    leg1.leg_p2p(x0, 0.0f, z0 + 100.0f, x0, 0.0f, z0 - 100.0f);
-    leg1.leg_read_position();
-    delay(500);
+    // Compute total distance and steps
+    double dx = 0.0;
+    double dy = y_start - y_end;
+    double dz = 0.0;
+    double dist = sqrt(dx * dx + dy * dy + dz * dz);
+    int steps = int(dist / Leg::STEP_SIZE + 0.5);
+    if (steps < 1)
+        steps = 1;
+    int ms_per_move = Leg::TOTAL_MS / steps;
+    int uart_pause = (ms_per_move / 2 >= 1 ? ms_per_move / 2 : 1);
+    Serial.printf("Parallel sweep: dist=%.1f steps=%d move=%dms pause=%dms\n",
+                  dist, steps, ms_per_move, uart_pause);
 
-    // 3) Larger diagonal step forward-right (50mm x, 100mm y, -50mm z)
-    Serial.println("\n3) Larger diagonal step forward-right");
-    // Move to diagonal start
-    leg1.leg_to_position(x0, 0.0f, z0, Leg::TOTAL_MS);
-    leg1.leg_read_position();
-    delay(500);
-    // Step forward-right
-    leg1.leg_p2p(x0, 0.0f, z0, x0 + 50.0f, 100.0f, z0 - 50.0f);
-    leg1.leg_read_position();
-    delay(500);
-    // Return to start
-    leg1.leg_p2p(x0 + 50.0f, 100.0f, z0 - 50.0f, x0, 0.0f, z0);
-    leg1.leg_read_position();
-    delay(500);
-
-    // 4) Large circle around neutral (radius 50mm Y, 25mm Z)
-    Serial.println("\n4) Large circle around neutral");
-    // Move to circle start
-    leg1.leg_to_position(x0, 50.0f, z0, Leg::TOTAL_MS);
-    leg1.leg_read_position();
-    delay(500);
-    const int CIRCLE_STEPS = 16;
-    const float RY = 50.0f; // 50 mm radius in Y
-    const float RZ = 25.0f; // 25 mm radius in Z
-    for (int i = 0; i <= CIRCLE_STEPS; ++i)
+    // Sweep all three legs together
+    for (int i = 0; i <= steps; ++i)
     {
-        float angle = TWO_PI * i / CIRCLE_STEPS;
-        float y = RY * cos(angle);
-        float z = z0 + RZ * sin(angle);
-        leg1.leg_to_position(x0, y, z, Leg::TOTAL_MS / CIRCLE_STEPS);
-        delay(Leg::TOTAL_MS / CIRCLE_STEPS / 2);
-    }
-    leg1.leg_read_position();
+        double t = double(i) / steps;
+        double x = x0;
+        double y = y_start + (y_end - y_start) * t;
+        double z = z0;
 
-    // Unload
-    Serial.println("\nUnloading servos...");
+        bool success =
+            leg1.leg_to_position(x, y, z, ms_per_move) &&
+            leg2.leg_to_position(x, y, z, ms_per_move) &&
+            leg3.leg_to_position(x, y, z, ms_per_move) &&
+            leg4.leg_to_position(x, y, z, ms_per_move) &&
+            leg5.leg_to_position(x, y, z, ms_per_move) &&
+            leg6.leg_to_position(x, y, z, ms_per_move);
+
+        if (!success)
+        {
+            Serial.printf("Parallel move failed @ step %d: x=%.1f y=%.1f z=%.1f\n", i, x, y, z);
+            break;
+        }
+
+        delay(uart_pause);
+    }
+
+    delay(ms_per_move + uart_pause + 100);
+
     leg1.leg_unload_all();
-    Serial.println("=== Extended Test Suite Complete ===");
+    leg2.leg_unload_all();
+    leg3.leg_unload_all();
+    leg4.leg_unload_all();
+    leg5.leg_unload_all();
+    leg6.leg_unload_all();
+    Serial.println("=== Test Complete ===");
 }
 
 void loop()
 {
-    // No further actions
+    // Nothing here
 }
