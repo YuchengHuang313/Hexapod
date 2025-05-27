@@ -16,8 +16,8 @@ Leg::Leg(int leg_id, int hip_id, int knee_id, int ankle_id)
       hardwareSerial(leg_id <= 3 ? 1 : 2), busServo(hardwareSerial) // Initialize instance members
 {
     // Determine pins based on leg_id
-    int tx_pin = leg_id > 3 ? 17 : 5;
-    int rx_pin = leg_id > 3 ? 16 : 4;
+    int tx_pin = leg_id > 3 ? 8 : 5;
+    int rx_pin = leg_id > 3 ? 7 : 4;
 
     Serial.printf("Leg %d: Using pins RX=%d, TX=%d\n", leg_id, tx_pin, rx_pin);
 

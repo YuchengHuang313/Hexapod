@@ -69,7 +69,13 @@ void setup()
     }
 
     delay(ms_per_move + uart_pause + 100);
-    
+    leg1.leg_read_position();
+    leg2.leg_read_position();
+    leg3.leg_read_position();
+    leg4.leg_read_position();
+    leg5.leg_read_position();
+    leg6.leg_read_position();
+
     leg1.leg_unload_all();
     leg2.leg_unload_all();
     leg3.leg_unload_all();
