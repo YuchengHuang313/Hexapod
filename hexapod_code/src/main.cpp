@@ -19,7 +19,6 @@ void setup()
     float z0 = Leg::KNEE_TO_ANKLE;
     float y_start = 150.0f;
     float y_end = -150.0f;
-
     // Move all legs to the same starting position
     Serial.println("\n1) Move all legs to starting position");
     leg1.leg_to_position(x0, y_start, z0, Leg::TOTAL_MS);

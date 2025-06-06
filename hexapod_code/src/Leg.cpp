@@ -94,9 +94,9 @@ bool Leg::leg_p2p(double sx, double sy, double sz,
 
 void Leg::leg_unload_all()
 {
-    Serial.printf("Unloading servos for Leg %d: hip=%d, knee=%d, ankle=%d\n", 
+    Serial.printf("Unloading servos for Leg %d: hip=%d, knee=%d, ankle=%d\n",
                   legId, hipId, kneeId, ankleId);
-    
+
     // Unload each servo individually with delay and error checking
     busServo.LobotSerialServoUnload(hipId);
     busServo.LobotSerialServoUnload(kneeId);

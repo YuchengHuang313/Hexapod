@@ -17,12 +17,10 @@ Hexapod::Hexapod() : legs{
 }
 
 // Method to move the hexapod to a given position
-int Hexapod::hexapod_to_position(float x, float y, float z)
+bool Hexapod::hexapod_to_position(double x, double y, double z)
 {
-    // Implementation goes here
-    // Iterate over the legs and move each leg to the desired position
-    // Return a status code
-    return 0; // Placeholder return value
+
+    return false; 
 }
 
 // Method to check the status of the hexapod
