@@ -1,36 +1,51 @@
 #include <Arduino.h>
 #include "LobotSerialServoControl.h"
-// Create HardwareSerial object on UART1
-HardwareSerial uart(1); // Use UART1
-// LobotSerialServoControl busServo(uart);
+#include "ServoController.h"
+
+ServoController controller(Serial1);
+
+Servo servo_command1[] = {1, 500};
+Servo servo_command2[] = {1, 0};
 
 void setup()
 {
-    Serial.begin(115200); // Debug over USB Serial
-
-    // Initialize UART1 on GPIO5 (TX) and GPIO4 (RX)
-    uart.begin(115200, SERIAL_8N1, 5, 4); // RX, TX (note the order)
-    // busServo.OnInit();
-    // busServo.LobotSerialServoMove(2, 1000, 1000);
-    // delay(1000);
-    // busServo.LobotSerialServoMove(2, 0, 1000);
-    uint8_t moveTo1000[] = {
-        0x55, 0x55, 0x02, 0x07, 0x01, 0xe8, 0x3, 0xe8, 0x03, 0x1f};
-    uint8_t moveTo0[] = {
-        0x55, 0x55, 0x02, 0x07, 0x01, 0x00, 0x00, 0xE8, 0x03, 0xa};
-
-    Serial.println("Sent command 1");
-    uart.write(moveTo1000, 10);
-    delay(1000);
-    Serial.println("Sent command 2");
-    uart.write(moveTo0, 10);
-
+    // Initialize USB Serial for debugging (optional)
+    Serial.begin(115200);
     delay(1000);
 }
 
 void loop()
 {
-    // Empty loop
+    uint8_t readPos[] = {0x55, 0x55, 0x04, 0x15, 0x01, 0x01};
+    Serial.println("Sent command 1");
+    // Serial1.write(moveTo1000, 10);
+    controller.moveServos(servo_command1, 1, 1500);
+    delay(2000);
+    Serial1.write(readPos, 6);
+    Serial1.flush();
+    delay(10);
+    Serial.print("reading data 1: {");
+    while (Serial1.available())
+    {
+        Serial.printf(" 0x%02x ", Serial1.read());
+        delay(1);
+    }
+    Serial.println("} done reading");
+
+    Serial.println("Sent command 2");
+    controller.moveServos(servo_command2, 1, 1500);
+    // Serial1.write(moveTo0, 10);
+    delay(2000);
+    Serial1.write(readPos, 6);
+    Serial1.flush();
+    delay(10);
+    Serial.print("reading data 2: {");
+    while (Serial1.available())
+    {
+        Serial.printf(" 0x%02x ", Serial1.read());
+        delay(1);
+    }
+    Serial.println("} done reading");
 }
 
 // #include <Arduino.h>
@@ -39,6 +54,7 @@ void loop()
 // void setup()
 // {
 //     Serial.begin(115200);
+//     delay(500);
 //     Serial.println("=== Leg Movement Test Suite (Parallel Multi-leg Version) ===");
 //     // Instantiate legs
 //     Leg leg1(1, 1, 2, 3);
@@ -103,6 +119,7 @@ void loop()
 //     }
 
 //     delay(ms_per_move + uart_pause + 100);
+
 //     leg1.leg_read_position();
 //     leg2.leg_read_position();
 //     leg3.leg_read_position();
