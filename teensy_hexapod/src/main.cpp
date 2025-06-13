@@ -4,48 +4,36 @@
 
 ServoController controller(Serial1);
 
-Servo servo_command1[] = {1, 500};
+Servo servo_command1[] = {1, 256};
 Servo servo_command2[] = {1, 0};
+uint8_t IDs[] = {1};
+Servo servos_pos[1] = {{1, 0}};
 
 void setup()
 {
     // Initialize USB Serial for debugging (optional)
     Serial.begin(115200);
+    Serial1.setTimeout(5);
     delay(1000);
 }
 
 void loop()
 {
-    uint8_t readPos[] = {0x55, 0x55, 0x04, 0x15, 0x01, 0x01};
     Serial.println("Sent command 1");
-    // Serial1.write(moveTo1000, 10);
-    controller.moveServos(servo_command1, 1, 1500);
-    delay(2000);
-    Serial1.write(readPos, 6);
-    Serial1.flush();
-    delay(10);
-    Serial.print("reading data 1: {");
-    while (Serial1.available())
+    controller.moveServos(servo_command1, 1, 1000);
+    delay(1100);
+    if (controller.readServos(servos_pos, sizeof(IDs)))
     {
-        Serial.printf(" 0x%02x ", Serial1.read());
-        delay(1);
+        Serial.printf("Command 1 pos = %d\n", servos_pos[0].Position);
     }
-    Serial.println("} done reading");
 
     Serial.println("Sent command 2");
-    controller.moveServos(servo_command2, 1, 1500);
-    // Serial1.write(moveTo0, 10);
-    delay(2000);
-    Serial1.write(readPos, 6);
-    Serial1.flush();
-    delay(10);
-    Serial.print("reading data 2: {");
-    while (Serial1.available())
+    controller.moveServos(servo_command2, 1, 1000);
+    delay(1100);
+    if (controller.readServos(servos_pos, sizeof(IDs)))
     {
-        Serial.printf(" 0x%02x ", Serial1.read());
-        delay(1);
+        Serial.printf("Command 2 pos = %d\n", servos_pos[0].Position);
     }
-    Serial.println("} done reading");
 }
 
 // #include <Arduino.h>
