@@ -17,25 +17,36 @@ Leg::Leg(int leg_id, int hip_id, int knee_id, int ankle_id)
       ankleId(ankle_id),
 
       // Pick the right SerialX and hand it straight to busServo:
-      busServo((leg_id <= 2)   ? Serial1
-               : (leg_id <= 4) ? Serial2
-                               : Serial3)
+      //   busServo((leg_id <= 2)   ? Serial1
+      //            : (leg_id <= 4) ? Serial2
+      //                            : Serial3)
+      busServo((leg_id <= 3) ? Serial1 : Serial2)
+
 {
     // Begin whichever SerialX we chose:
-    if (leg_id <= 2)
+    // if (leg_id <= 2)
+    // {
+    //     Serial.printf("Leg %d: using Serial1 at %dbps\n", legId, BAUDRATE);
+    //     Serial1.begin(BAUDRATE);
+    // }
+    // else if (leg_id <= 4)
+    // {
+    //     Serial.printf("Leg %d: using Serial2 at %dbps\n", legId, BAUDRATE);
+    //     Serial2.begin(BAUDRATE);
+    // }
+    // else
+    // {
+    //     Serial.printf("Leg %d: using Serial3 at %dbps\n", legId, BAUDRATE);
+    //     Serial3.begin(BAUDRATE);
+    // }
+    // busServo.OnInit();
+    if (leg_id <= 3)
     {
-        Serial.printf("Leg %d: using Serial1 at %dbps\n", legId, BAUDRATE);
         Serial1.begin(BAUDRATE);
-    }
-    else if (leg_id <= 4)
-    {
-        Serial.printf("Leg %d: using Serial2 at %dbps\n", legId, BAUDRATE);
-        Serial2.begin(BAUDRATE);
     }
     else
     {
-        Serial.printf("Leg %d: using Serial3 at %dbps\n", legId, BAUDRATE);
-        Serial3.begin(BAUDRATE);
+        Serial2.begin(BAUDRATE);
     }
     busServo.OnInit();
 }
@@ -139,15 +150,33 @@ void Leg::leg_unload_all()
 
 void Leg::leg_read_position()
 {
-    double ang[3], pos[3];
-    ang[0] = (busServo.LobotSerialServoReadPosition(hipId) - 500) * DEGREE_PER_UNIT;
-    ang[1] = (busServo.LobotSerialServoReadPosition(kneeId) - 500) * DEGREE_PER_UNIT;
-    ang[2] = (busServo.LobotSerialServoReadPosition(ankleId) - 500) * DEGREE_PER_UNIT;
+    // 1) Read raw servo units back from the controller
+    int rawHip = busServo.LobotSerialServoReadPosition(hipId);
+    int rawKnee = busServo.LobotSerialServoReadPosition(kneeId);
+    int rawAnkle = busServo.LobotSerialServoReadPosition(ankleId);
+
+    // 2) Compensate the ankle reading by subtracting the offset
+    int compAnkle = rawAnkle - FOOT_UNIT_OFFSET;
+    // (if you want to guard against underflow/overflow, you can clamp here:
+    //  compAnkle = constrain(compAnkle, 0, 1000); )
+
+    // 3) Convert each back into an angle in degrees (500→0° center)
+    double angHip = (rawHip - 500) * DEGREE_PER_UNIT;
+    double angKnee = (rawKnee - 500) * DEGREE_PER_UNIT;
+    double angAnkle = (compAnkle - 500) * DEGREE_PER_UNIT;
+
+    // 4) Run forward kinematics to get Cartesian position
+    double pos[3];
     forward_kinematics(pos, range_limits,
-                       ang[0], ang[1], ang[2],
+                       angHip, angKnee, angAnkle,
                        HIP_TO_KNEE, KNEE_TO_ANKLE, ANKLE_TO_TIP);
-    Serial.printf("Actual Leg %d: x=%.2f y=%.2f z=%.2f\n",
-                  legId, pos[0], pos[1], pos[2]);
+
+    // 5) Print it out
+    Serial.printf("Actual Leg %d: raw=[%d,%d,%d]  adj ankle=%d  x=%.2f y=%.2f z=%.2f\n",
+                  legId,
+                  rawHip, rawKnee, rawAnkle,
+                  compAnkle,
+                  pos[0], pos[1], pos[2]);
 }
 
 int Leg::leg_get_id() { return legId; }

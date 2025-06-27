@@ -76,12 +76,12 @@ void LobotSerialServoControl::LobotSerialServoMove(uint8_t id, int16_t position,
     buf[8] = GET_HIGH_BYTE(time);
     buf[9] = LobotCheckSum(buf);
 
-    Serial.print("Sending command: ");
-    for (int i = 0; i < 10; i++)
-    {
-        Serial.printf("0x%x ", buf[i]);
-    }
-    Serial.println();
+    // Serial.print("Sending command: ");
+    // for (int i = 0; i < 10; i++)
+    // {
+    //     Serial.printf("0x%x ", buf[i]);
+    // }
+    // Serial.println();
     if (isAutoEnableRT == false)
         TxEnable();
     SerialX->write(buf, 10);
@@ -331,7 +331,7 @@ int LobotSerialServoControl::LobotSerialServoReadPosition(uint8_t id)
     SerialX->write(buf, 6);
     if (isUseHardwareSerial)
     {
-        delayMicroseconds(600);
+        delayMicroseconds(1000);
     }
     if (isAutoEnableRT == false)
         RxEnable();
