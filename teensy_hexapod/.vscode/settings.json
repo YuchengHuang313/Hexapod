@@ -1,0 +1,6 @@
+{
+    "files.associations": {
+        "*.sv": "systemverilog",
+        "string_view": "cpp"
+    }
+}

@@ -16,7 +16,9 @@ public:
 
     Hexapod();
     bool hexapod_to_position(double x, double y, double z);
-    int check_status();
+    bool hexapod_to_position_mirror(double target_pos[3]);
+    bool hexapod_read_all_leg_pos(double leg_servo_pos[6][3]);
+    void hexapod_unload();
 };
 
 #endif // HEXAPOD_H

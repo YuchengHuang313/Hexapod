@@ -45,7 +45,7 @@ public:
                  double end_y,
                  double end_z);
     void leg_unload_all();
-    void leg_read_position();
+    bool leg_read_position(double pos[3]);
     int leg_get_id();
     int leg_get_hip_id();
     int leg_get_knee_id();

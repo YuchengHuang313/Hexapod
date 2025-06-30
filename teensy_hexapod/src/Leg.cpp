@@ -57,14 +57,14 @@ bool Leg::leg_to_position(double x, double y, double z, int time_ms)
     if (!inverse_kinematics(thetas, x, y, z,
                             HIP_TO_KNEE, KNEE_TO_ANKLE, ANKLE_TO_TIP))
     {
-        Serial.println("Error: IK failed");
+        Serial.println("Leg.cpp -> Error: IK failed");
         return false;
     }
 
     // 2) Physical range‐limit check (still in degrees)
     if (!leg_check_range_limits(thetas))
     {
-        Serial.println("Error: range limit exceeded");
+        Serial.println("Leg.cpp -> Error: range limit exceeded");
         return false;
     }
 
@@ -114,7 +114,7 @@ bool Leg::leg_p2p(double sx, double sy, double sz,
         steps = 1;
     int ms_per_move = TOTAL_MS / steps;
     int uart_pause = (ms_per_move / 2 >= 1 ? ms_per_move / 2 : 1);
-    Serial.printf("leg_p2p: dist=%.1f steps=%d, move=%dms, pause=%dms\n",
+    Serial.printf("Leg.cpp -> leg_p2p: dist=%.1f steps=%d, move=%dms, pause=%dms\n",
                   dist, steps, ms_per_move, uart_pause);
     // sweep
     for (int i = 0; i <= steps; ++i)
@@ -138,7 +138,7 @@ bool Leg::leg_p2p(double sx, double sy, double sz,
 
 void Leg::leg_unload_all()
 {
-    Serial.printf("Unloading servos for Leg %d: hip=%d, knee=%d, ankle=%d\n",
+    Serial.printf("Leg.cpp -> Unloading servos for Leg %d: hip=%d, knee=%d, ankle=%d\n",
                   legId, hipId, kneeId, ankleId);
 
     // Unload each servo individually with delay and error checking
@@ -148,7 +148,7 @@ void Leg::leg_unload_all()
     delay(100);
 }
 
-void Leg::leg_read_position()
+bool Leg::leg_read_position(double pos[3])
 {
     // 1) Read raw servo units back from the controller
     int rawHip = busServo.LobotSerialServoReadPosition(hipId);
@@ -166,17 +166,18 @@ void Leg::leg_read_position()
     double angAnkle = (compAnkle - 500) * DEGREE_PER_UNIT;
 
     // 4) Run forward kinematics to get Cartesian position
-    double pos[3];
-    forward_kinematics(pos, range_limits,
-                       angHip, angKnee, angAnkle,
-                       HIP_TO_KNEE, KNEE_TO_ANKLE, ANKLE_TO_TIP);
+    bool fk_check = forward_kinematics(pos, range_limits,
+                                       angHip, angKnee, angAnkle,
+                                       HIP_TO_KNEE, KNEE_TO_ANKLE, ANKLE_TO_TIP);
 
     // 5) Print it out
-    Serial.printf("Actual Leg %d: raw=[%d,%d,%d]  adj ankle=%d  x=%.2f y=%.2f z=%.2f\n",
+    Serial.printf("Leg.cpp -> Actual Leg %d: raw=[%d,%d,%d]  adj ankle=%d  x=%.2f y=%.2f z=%.2f\n",
                   legId,
                   rawHip, rawKnee, rawAnkle,
                   compAnkle,
                   pos[0], pos[1], pos[2]);
+
+    return fk_check;
 }
 
 int Leg::leg_get_id() { return legId; }

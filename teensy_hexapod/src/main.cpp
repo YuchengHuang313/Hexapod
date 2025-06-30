@@ -1,117 +1,43 @@
-
 #include <Arduino.h>
-#include "Leg.h"
-#include "LobotSerialServoControl.h"
+#include "Hexapod.h"
+#include "Leg.h" // for the static geometry constants
 
-// void setup()
-// {
-//     Serial1.begin(115200);
-//     Serial2.begin(115200);
-//     Serial.begin(115200);
-
-//     // LobotSerialServoControl busServo(Serial1);
-//     // busServo.LobotSerialServoMove(1, 500, 1000);
-//     // busServo.LobotSerialServoMove(1, 0, 1000);
-//     uint8_t moveTo1000[] = {0x55, 0x55, 0x01, 0x07, 0x01, 0xf4, 0x01, 0xe8, 0x03, 0x16};
-//     uint8_t moveTo0[] = {0x55, 0x55, 0x01, 0x07, 0x01, 0x00, 0x00, 0xE8, 0x03, 0xb};
-
-//     Serial.println("send 1");
-//     Serial1.write(moveTo1000, 10);
-//     Serial2.write(moveTo1000, 10);
-//     delay(1000);
-
-//     Serial.println("send 2");
-//     Serial1.write(moveTo0, 10);
-//     Serial2.write(moveTo0, 10);
-//     delay(1000);
-// }
+// single global hexapod instance
+Hexapod hexapod;
 
 void setup()
 {
     Serial.begin(115200);
     delay(500);
-    Serial.println("=== Leg Movement Test Suite (Parallel Multi-leg Version) ===");
-    // Instantiate legs
-    Leg leg1(1, 1, 2, 3);
-    Leg leg2(2, 4, 5, 6);
-    Leg leg3(3, 7, 8, 9);
-    Leg leg4(4, 10, 11, 12);
-    Leg leg5(5, 13, 14, 15);
-    Leg leg6(6, 16, 17, 18);
-    delay(500);
+    Serial.println("=== Hexapod Mirror‐Move Test ===");
 
-    // Neutral leg position
-    float x0 = Leg::HIP_TO_KNEE + Leg::ANKLE_TO_TIP;
-    float z0 = Leg::KNEE_TO_ANKLE;
-    float y_start = 150.0f;
-    float y_end = -150.0f;
-    // Move all legs to the same starting position
-    Serial.println("1) Move all legs to starting position");
-    leg1.leg_to_position(x0, y_start, z0, Leg::TOTAL_MS);
-    leg2.leg_to_position(x0, y_start, z0, Leg::TOTAL_MS);
-    leg3.leg_to_position(x0, y_start, z0, Leg::TOTAL_MS);
-    leg4.leg_to_position(x0, y_start, z0, Leg::TOTAL_MS);
-    leg5.leg_to_position(x0, y_start, z0, Leg::TOTAL_MS);
-    leg6.leg_to_position(x0, y_start, z0, Leg::TOTAL_MS);
-    delay(Leg::TOTAL_MS + 100);
+    // Compute a default tip position (for example, straight out in +Y)
+    double x0 = Leg::HIP_TO_KNEE + Leg::ANKLE_TO_TIP;
+    double z0 = -2 * Leg::KNEE_TO_ANKLE;
+    double y_target = 150.0; // change to whatever Y you want
 
-    // Compute total distance and steps
-    double dx = 0.0;
-    double dy = y_start - y_end;
-    double dz = 0.0;
-    double dist = sqrt(dx * dx + dy * dy + dz * dz);
-    int steps = int(dist / Leg::STEP_SIZE + 0.5);
-    if (steps < 1)
-        steps = 1;
-    int ms_per_move = Leg::TOTAL_MS / steps;
-    int uart_pause = (ms_per_move / 2 >= 1 ? ms_per_move / 2 : 1);
-    Serial.printf("Parallel sweep: dist=%.1f steps=%d move=%dms pause=%dms\n",
-                  dist, steps, ms_per_move, uart_pause);
+    // pack into the 3‐element array your API expects
+    double target_pos[3] = {x0, y_target, z0};
 
-    // Sweep all three legs together
-    for (int i = 0; i <= steps; ++i)
+    // call your new mirror‐sweep method
+    bool ok = hexapod.hexapod_to_position_mirror(target_pos);
+
+    y_target = -150.0; // change to whatever Y you want
+    double target_pos1[3] = {x0, y_target, z0};
+    ok &= hexapod.hexapod_to_position_mirror(target_pos1);
+    if (ok)
     {
-        double t = double(i) / steps;
-        double x = x0;
-        double y = y_start + (y_end - y_start) * t;
-        double z = z0;
-
-        bool success =
-            leg1.leg_to_position(x, y, z, ms_per_move) &&
-            leg2.leg_to_position(x, y, z, ms_per_move) &&
-            leg3.leg_to_position(x, y, z, ms_per_move) &&
-            leg4.leg_to_position(x, y, z, ms_per_move) &&
-            leg5.leg_to_position(x, y, z, ms_per_move) &&
-            leg6.leg_to_position(x, y, z, ms_per_move);
-
-        if (!success)
-        {
-            Serial.printf("Parallel move failed @ step %d: x=%.1f y=%.1f z=%.1f\n", i, x, y, z);
-            break;
-        }
-
-        delay(ms_per_move);
+        Serial.println("hexapod_to_position_mirror: SUCCESS");
+    }
+    else
+    {
+        Serial.println("hexapod_to_position_mirror: FAILURE");
     }
 
-    delay(1000);
-
-    leg1.leg_read_position();
-    leg2.leg_read_position();
-    leg3.leg_read_position();
-    leg5.leg_read_position();
-    leg6.leg_read_position();
-    delay(200);
-
-    leg1.leg_unload_all();
-    leg2.leg_unload_all();
-    leg3.leg_unload_all();
-    leg4.leg_unload_all();
-    leg5.leg_unload_all();
-    leg6.leg_unload_all();
-    Serial.println("=== Test Complete ===");
+    hexapod.hexapod_unload();
 }
 
 void loop()
 {
-    // Nothing here
+    // nothing to do after the one‐off move
 }

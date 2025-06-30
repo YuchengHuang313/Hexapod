@@ -27,7 +27,7 @@ bool inverse_kinematics(double *outputs, double x, double y, double z, double a1
     {
         if (verbose)
         {
-            Serial.println("Out of reach from IK");
+            Serial.println("Kinematics.cpp -> inverse_kinematics: Out of reach");
         }
         return false;
     }
@@ -93,7 +93,7 @@ bool forward_kinematics(double *outputs, double *range_limits, double hip_angle_
         knee_angle_deg < range_limits[2] || knee_angle_deg > range_limits[3] ||
         ankle_angle_deg < range_limits[4] || ankle_angle_deg > range_limits[5])
     {
-        Serial.println("Out of reach from FK");
+        Serial.println("Kinematics.cpp -> forward_kinematics: Out of reach");
         return false;
     }
 
