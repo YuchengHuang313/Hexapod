@@ -90,52 +90,6 @@ bool Leg::leg_to_position(double x, double y, double z, int time_ms)
     return true;
 }
 
-/**
- * @brief point-to-point move in straight line with adaptive timing
- * @param start_x start x
- * @param start_y start y
- * @param start_z start z
- * @param end_x   end x
- * @param end_y   end y
- * @param end_z   end z
- * @return true if sweep completed (or first IK failure encountered)
- */
-bool Leg::leg_p2p(double sx, double sy, double sz,
-                  double ex, double ey, double ez)
-{
-    // compute delta and distance
-    double dx = ex - sx;
-    double dy = ey - sy;
-    double dz = ez - sz;
-    double dist = sqrt(dx * dx + dy * dy + dz * dz);
-    // step count
-    int steps = int(dist / STEP_SIZE + 0.5);
-    if (steps < 1)
-        steps = 1;
-    int ms_per_move = TOTAL_MS / steps;
-    int uart_pause = (ms_per_move / 2 >= 1 ? ms_per_move / 2 : 1);
-    Serial.printf("Leg.cpp -> leg_p2p: dist=%.1f steps=%d, move=%dms, pause=%dms\n",
-                  dist, steps, ms_per_move, uart_pause);
-    // sweep
-    for (int i = 0; i <= steps; ++i)
-    {
-        double t = double(i) / steps;
-        double x = sx + dx * t;
-        double y = sy + dy * t;
-        double z = sz + dz * t;
-        if (!leg_to_position(x, y, z, ms_per_move))
-        {
-            Serial.printf(" IK fail @%3d: x=%.1f y=%.1f z=%.1f\n",
-                          i, x, y, z);
-            return false;
-        }
-        delay(ms_per_move + uart_pause); // give enough time for servos to move
-    }
-    // wait final
-    delay(ms_per_move + uart_pause + 100);
-    return true;
-}
-
 void Leg::leg_unload_all()
 {
     Serial.printf("Leg.cpp -> Unloading servos for Leg %d: hip=%d, knee=%d, ankle=%d\n",

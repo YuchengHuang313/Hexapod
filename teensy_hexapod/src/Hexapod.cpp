@@ -70,11 +70,11 @@ bool Hexapod::hexapod_to_position_mirror(double target_pos[3])
             double z = start_pos[leg][2] + distances[leg][2] * t;
             all_ok &= legs[leg].leg_to_position(x, y, z, ms_per_move);
         }
-        if (!all_ok)
-        {
-            Serial.printf("Hexapod.cpp -> hexapod_to_position_mirror: move failed @ step %d\n", s);
-            return false;
-        }
+        // if (!all_ok)
+        // {
+        //     Serial.printf("Hexapod.cpp -> hexapod_to_position_mirror: move failed @ step %d\n", s);
+        //     return false;
+        // }
         delay(ms_per_move);
     }
     delay(50);

@@ -32,18 +32,8 @@ public:
     static constexpr float KNEE_TO_ANKLE = 63.54f;
     static constexpr float ANKLE_TO_TIP = 200.0f;
 
-    // sweep parameters
-    static constexpr int TOTAL_MS = 1000;    // ms per p2p sweep
-    static constexpr float STEP_SIZE = 1.0f; // mm per step
-
     Leg(int leg_id, int hip_id, int knee_id, int ankle_id);
     bool leg_to_position(double x, double y, double z, int time_ms);
-    bool leg_p2p(double start_x,
-                 double start_y,
-                 double start_z,
-                 double end_x,
-                 double end_y,
-                 double end_z);
     void leg_unload_all();
     bool leg_read_position(double pos[3]);
     int leg_get_id();
