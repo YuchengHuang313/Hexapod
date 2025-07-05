@@ -5,9 +5,9 @@
 
 // Only keep the static range_limits
 double Leg::range_limits[6] = {
-    -46.0, 46.0, // hip
-    -91.0, 91.0, // knee
-    -121.0, 1.0  // ankle
+    -50.0, 50.0, // hip
+    -95.0, 95.0, // knee
+    -125.0, 5.0  // ankle
 };
 
 Leg::Leg(int leg_id, int hip_id, int knee_id, int ankle_id)

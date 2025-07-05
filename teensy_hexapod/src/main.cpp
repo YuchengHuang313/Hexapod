@@ -12,8 +12,8 @@ void setup()
     Serial.println("=== Hexapod Mirror‐Move Test ===");
 
     // Compute a default tip position (for example, straight out in +Y)
-    double x0 = 100;
-    double z0 = -200;
+    double x0 = 135;
+    double z0 = -150;
     double y_target = 100.0; // change to whatever Y you want
 
     // pack into the 3‐element array your API expects
