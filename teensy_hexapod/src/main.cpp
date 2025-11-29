@@ -12,18 +12,20 @@ void setup()
     Serial.println("=== Hexapod Mirror‐Move Test ===");
 
     // Compute a default tip position (for example, straight out in +Y)
-    double x0 = 135;
-    double z0 = -150;
-    double y_target = 100.0; // change to whatever Y you want
-
+    double x = 140;
+    double y = -150; // change to whatever Y you want
+    double z = -160;
+    
     // pack into the 3‐element array your API expects
-    double target_pos[3] = {x0, y_target, z0};
+    double target_pos[3] = {x, y, z};
 
     // call your new mirror‐sweep method
     bool ok = hexapod.hexapod_to_position_mirror(target_pos);
 
-    y_target = -100.0; // change to whatever Y you want
-    double target_pos1[3] = {x0, y_target, z0};
+    // move the the higher middle position directly
+    // double target_pos_mid[3] = {37 + 200 + 63.54, 0, 0}; // lift Z a bit
+    // ok &= hexapod.hexapod_to_position_mirror(target_pos_mid);
+    double target_pos1[3] = {x, -y, z};
     ok &= hexapod.hexapod_to_position_mirror(target_pos1);
     if (ok)
     {
