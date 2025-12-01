@@ -62,18 +62,11 @@ bool Hexapod::hexapod_to_position_mirror(double target_pos[3])
     for (int s = 0; s <= steps; ++s)
     {
         double t = double(s) / steps;
-        double t_eased = cubic_ease_in_out(t);
+        double t_ratio = time_scaling(t);
 
-        // Scale ms_per_move: starts high, decreases as motion progresses
-        // Uses (1 - t_eased)^2 for aggressive acceleration curve
-        // At t=0: multiplier = 1.0 (normal speed)
-        // At t=1: multiplier = 0.0 (fastest, limited to 1ms minimum)
-        double multiplier = (1.0 - t_eased) * (1.0 - t_eased); // quadratic falloff
-        int ms_per_move = int(base_ms_per_move * multiplier + 0.5);
-        // Clamp to minimum of 1ms (manufacturer requirement)
-        if (ms_per_move < 1)
-            ms_per_move = 1;
-
+        int ms_per_move = max(base_ms_per_move, int(base_ms_per_move * t_ratio));
+        Serial.printf("  step %d/%d: t=%.3f t_ratio=%.3f ms_per_move=%d\n",
+                      s, steps, t, t_ratio, ms_per_move);
         bool all_ok = true;
         for (int leg = 0; leg < 6; ++leg)
         {
@@ -82,11 +75,6 @@ bool Hexapod::hexapod_to_position_mirror(double target_pos[3])
             double z = start_pos[leg][2] + distances[leg][2] * t;
             all_ok &= legs[leg].leg_to_position(x, y, z, ms_per_move);
         }
-        // if (!all_ok)
-        // {
-        //     Serial.printf("Hexapod.cpp -> hexapod_to_position_mirror: move failed @ step %d\n", s);
-        //     return false;
-        // }
         delay(ms_per_move);
     }
     delay(50);
@@ -111,20 +99,11 @@ void Hexapod::hexapod_unload()
     }
 }
 
-double Hexapod::cubic_ease_in_out(double t) const
+double Hexapod::time_scaling(double t) const
 {
-    // Cubic ease-in-out function
-    // Returns a value from 0 to 1, with cubic acceleration/deceleration
-    // Starts slow, accelerates in middle, slows down at end
-    if (t < 0.5)
-    {
-        // First half: ease in (cubic acceleration)
-        return 4.0 * t * t * t;
-    }
-    else
-    {
-        // Second half: ease out (cubic deceleration)
-        double t_shifted = t - 1.0;
-        return 1.0 + 4.0 * t_shifted * t_shifted * t_shifted;
-    }
+    // given t in [0, 1] but we are scaling directly on the time from one
+    // position to the next, we want to ease in and out. Thus the time scaling
+    // function is just a quadratic ease-in-out curve.
+
+    return max(1.0, 20.0 * (t - 0.5) * (t - 0.5));
 }

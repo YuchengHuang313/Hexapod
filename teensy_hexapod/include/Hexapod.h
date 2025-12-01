@@ -12,7 +12,7 @@ private:
 
 public:
     static constexpr int TOTAL_MS = 1000;    // ms per p2p sweep
-    static constexpr float STEP_SIZE = 1.5f; // mm per step
+    static constexpr float STEP_SIZE = 1.2f; // mm per step
 
     Hexapod();
     bool hexapod_to_position(double x, double y, double z);
@@ -24,7 +24,7 @@ private:
     // Cubic easing function for time scaling: returns value from 0 to 1
     // t: normalized progress (0 to 1)
     // returns: cubic-eased progress (0 to 1)
-    double cubic_ease_in_out(double t) const;
+    double time_scaling(double t) const;
 };
 
 #endif // HEXAPOD_H
