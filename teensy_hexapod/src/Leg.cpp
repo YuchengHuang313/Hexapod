@@ -64,7 +64,8 @@ bool Leg::leg_to_position(double x, double y, double z, int time_ms)
     // 2) Physical range‐limit check (still in degrees)
     if (!leg_check_range_limits(thetas))
     {
-        Serial.println("Leg.cpp -> Error: range limit exceeded");
+        Serial.printf("Leg.cpp -> Leg %d Error: range limit exceeded at pos(%.1f,%.1f,%.1f)\n",
+                      legId, x, y, z);
         return false;
     }
 
