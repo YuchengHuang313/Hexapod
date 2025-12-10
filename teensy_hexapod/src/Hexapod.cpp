@@ -186,7 +186,7 @@ bool Hexapod::tripod_move(double direction[3], double step_height, TimeScalingFu
 
     // Stride = 2 * radius for full diameter movement
     // But use a safety factor since rotated legs have asymmetric reach
-    double stride_length = safe_radius * 2.0 * 1; 
+    double stride_length = safe_radius * 2.0 * 1.25;
 
     Serial.printf("Hexapod.cpp -> tripod_move: ground_z=%.1f step_height=%.1f\n", ground_z, step_height);
     Serial.printf("  Ground workspace: center(%.1f,%.1f) r=%.1f\n", center_x_ground, center_y_ground, radius_ground);
@@ -217,6 +217,41 @@ bool Hexapod::tripod_move(double direction[3], double step_height, TimeScalingFu
     if (steps < 1)
         steps = 1;
     int ms_per_step = TOTAL_MS / steps;
+
+    // PRE-PHASE: Smoothly interpolate from current positions to starting extremes
+    Serial.println("Pre-positioning legs to starting extremes...");
+
+    int pre_steps = 10;       // Number of interpolation steps for smooth transition
+    int pre_ms_per_step = 5; // 5ms per step = 150ms total for pre-positioning
+
+    for (int s = 0; s <= pre_steps; ++s)
+    {
+        double t = double(s) / pre_steps;
+
+        // Move legs 1,3,5 from current position to backward extreme
+        for (int leg_idx : {0, 2, 4})
+        {
+            double target[3];
+            target[0] = current_pos[leg_idx][0] + t * (backward_extreme[0] - current_pos[leg_idx][0]);
+            target[1] = current_pos[leg_idx][1] + t * (backward_extreme[1] - current_pos[leg_idx][1]);
+            target[2] = current_pos[leg_idx][2] + t * (backward_extreme[2] - current_pos[leg_idx][2]);
+            legs[leg_idx].leg_to_position(target[0], target[1], target[2], pre_ms_per_step);
+        }
+
+        // Move legs 2,4,6 from current position to forward extreme
+        for (int leg_idx : {1, 3, 5})
+        {
+            double target[3];
+            target[0] = current_pos[leg_idx][0] + t * (forward_extreme[0] - current_pos[leg_idx][0]);
+            target[1] = current_pos[leg_idx][1] + t * (forward_extreme[1] - current_pos[leg_idx][1]);
+            target[2] = current_pos[leg_idx][2] + t * (forward_extreme[2] - current_pos[leg_idx][2]);
+            legs[leg_idx].leg_to_position(target[0], target[1], target[2], pre_ms_per_step);
+        }
+
+        delay(pre_ms_per_step);
+    }
+
+    delay(10); // Let servos settle before starting gait
 
     // PHASE 1: Legs 1,3,5 swing (curve), Legs 2,4,6 stance (line)
     Serial.println("Phase 1: Legs 1,3,5 swing");
@@ -311,15 +346,10 @@ bool Hexapod::tripod_move(double direction[3], double step_height, TimeScalingFu
         delay(ms_per_move);
     }
 
-    // Return all legs to center position to prevent drift across multiple calls
-    Serial.println("Returning legs to center position...");
-    double center_pos[3] = {center_x_ground, center_y_ground, ground_z};
-
-    for (int leg_idx = 0; leg_idx < 6; leg_idx++)
-    {
-        legs[leg_idx].leg_to_position(center_pos[0], center_pos[1], center_pos[2], 500);
-    }
-    delay(500);
+    // After Phase 2 completes:
+    // - Legs 1,3,5 are at backward extreme (ready for next cycle's swing)
+    // - Legs 2,4,6 are at forward extreme (ready for next cycle's stance)
+    // This is the perfect starting state for the next tripod_move call!
 
     return true;
 }
